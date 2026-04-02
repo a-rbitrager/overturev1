@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  name      String
+  avatarUrl String?
+  playlists Playlist[]
+  createdAt DateTime   @default(now())
+}
+
+model Artist {
+  id       String  @id @default(uuid())
+  name     String
+  imageUrl String?
+  albums   Album[]
+}
+
+model Album {
+  id          String   @id @default(uuid())
+  title       String
+  artistId    String
+  artist      Artist   @relation(fields: [artistId], references: [id])
+  coverUrl    String
+  tracks      Track[]
+  releaseYear Int
+
+  @@index([artistId])
+}
+
+model Track {
+  id        String         @id @default(uuid())
+  title     String
+  albumId   String
+  album     Album          @relation(fields: [albumId], references: [id])
+  duration  Int
+  audioUrl  String
+  playlists PlaylistTrack[]
+
+  @@index([albumId])
+}
+
+model Playlist {
+  id          String          @id @default(uuid())
+  name        String
+  description String?
+  coverUrl    String?
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  tracks      PlaylistTrack[]
+  isPublic    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([userId])
+}
+
+model PlaylistTrack {
+  id         String   @id @default(uuid())
+  playlistId String
+  trackId    String
+  position   Int
+  addedAt    DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, position])
+  @@index([playlistId])
+  @@index([trackId])
+}
